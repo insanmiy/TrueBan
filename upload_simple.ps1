@@ -2,6 +2,8 @@
 # =====================================
 
 Write-Host "Uploading TrueBan to GitHub..." -ForegroundColor Cyan
+Write-Host "Starting in 3 seconds..." -ForegroundColor Yellow
+Start-Sleep -Seconds 3
 
 try {
     # Initialize git repository
@@ -36,5 +38,6 @@ catch {
     Write-Host "Check if Git is installed and you have GitHub access" -ForegroundColor Yellow
 }
 
-Write-Host "Press any key to exit..." -ForegroundColor Gray
-$null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+Write-Host "Waiting 5 seconds before closing..." -ForegroundColor Yellow
+Start-Sleep -Seconds 5
+Write-Host "Finished!" -ForegroundColor Green
