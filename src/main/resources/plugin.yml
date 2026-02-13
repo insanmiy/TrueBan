@@ -1,0 +1,105 @@
+name: TrueBan
+version: '${version}'
+main: dev.insanmiy.trueban.TrueBan
+api-version: 1.21
+author: insanmiy
+description: A production-ready Minecraft moderation plugin for PaperMC
+website: https://github.com/insanmiy/TrueBan
+
+commands:
+  ban:
+    description: Ban a player permanently
+    usage: /ban <player> <reason>
+    permission: trueban.ban
+  tempban:
+    description: Ban a player temporarily
+    usage: /tempban <player> <duration> <reason>
+    permission: trueban.tempban
+  unban:
+    description: Unban a player
+    usage: /unban <player>
+    permission: trueban.unban
+  ipban:
+    description: Ban an IP address or player's IP
+    usage: /ipban <player|IP> <reason>
+    permission: trueban.ipban
+  kick:
+    description: Kick a player from the server
+    usage: /kick <player> <reason>
+    permission: trueban.kick
+  mute:
+    description: Mute a player permanently
+    usage: /mute <player> <reason>
+    permission: trueban.mute
+  tempmute:
+    description: Mute a player temporarily
+    usage: /tempmute <player> <duration> <reason>
+    permission: trueban.tempmute
+  unmute:
+    description: Unmute a player
+    usage: /unmute <player>
+    permission: trueban.unmute
+  history:
+    description: View a player's punishment history
+    usage: /history <player>
+    permission: trueban.history
+
+permissions:
+  trueban.ban:
+    description: Allows banning players
+    default: op
+  trueban.tempban:
+    description: Allows temporarily banning players
+    default: op
+  trueban.unban:
+    description: Allows unbanning players
+    default: op
+  trueban.ipban:
+    description: Allows IP banning
+    default: op
+  trueban.kick:
+    description: Allows kicking players
+    default: op
+  trueban.mute:
+    description: Allows muting players
+    default: op
+  trueban.tempmute:
+    description: Allows temporarily muting players
+    default: op
+  trueban.unmute:
+    description: Allows unmuting players
+    default: op
+  trueban.history:
+    description: Allows viewing punishment history
+    default: op
+  trueban.bypass:
+    description: Allows bypassing punishments
+    default: false
+  trueban.notify:
+    description: Receive notifications of punishments
+    default: op
+  trueban.mod:
+    description: Grants all moderation commands
+    children:
+      - trueban.ban
+      - trueban.tempban
+      - trueban.unban
+      - trueban.ipban
+      - trueban.kick
+      - trueban.mute
+      - trueban.tempmute
+      - trueban.unmute
+      - trueban.history
+      - trueban.notify
+    default: op
+  trueban.admin:
+    description: Grants all permissions including mod
+    children:
+      - trueban.mod
+      - trueban.bypass
+    default: op
+  trueban.*:
+    description: Grants all TrueBan permissions
+    children:
+      - trueban.admin
+    default: op
