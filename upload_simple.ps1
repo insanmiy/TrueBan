@@ -29,7 +29,7 @@ try {
 
     # Push to GitHub
     Write-Host "Pushing to GitHub..."
-    git push -u origin main
+    git push -u origin main --force
 
     Write-Host "Done! Your plugin is now at: https://github.com/insanmiy/TrueBan" -ForegroundColor Green
 }
