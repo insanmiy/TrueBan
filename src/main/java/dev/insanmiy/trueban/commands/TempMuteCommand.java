@@ -1,101 +1,102 @@
 package dev.insanmiy.trueban.commands;
 
 import dev.insanmiy.trueban.TrueBan;
-import dev.insanmiy.trueban.models.Punishment;
-import org.bukkit.Bukkit;
+import dev.insanmiy.trueban.punishment.PunishmentManager;
+import dev.insanmiy.trueban.punishment.PunishmentType;
 import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.time.Instant;
 import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
-public class TempMuteCommand extends CommandBase {
+/**
+ * /tempmute <player> <duration> <reason>
+ */
+public class TempmuteCommand extends CommandBase implements CommandExecutor {
 
-    public TempMuteCommand(TrueBan plugin) {
+    public TempmuteCommand(TrueBan plugin) {
         super(plugin);
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!hasPermission(sender, "trueban.tempmute")) {
-            sendMessage(sender, "&cYou don't have permission to use this command.");
+    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+        if (!checkPermission(sender, "trueban.tempmute")) {
             return true;
         }
 
         if (args.length < 3) {
-            sendMessage(sender, "&cUsage: /tempmute <player> <duration> <reason>");
+            sendMessage(sender, "commands.invalid-syntax",
+                    createPlaceholders("usage", "/tempmute <player> <duration> <reason>"));
             return true;
         }
 
         String playerName = args[0];
-        String duration = args[1];
-        String reason = Arrays.stream(Arrays.copyOfRange(args, 2, args.length))
-                .collect(Collectors.joining(" "));
+        String durationStr = args[1];
+        String reason = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
+        String operator = sender.getName();
 
-        long durationSeconds = parseDuration(duration);
-        if (durationSeconds == -1) {
-            sendMessage(sender, "&cInvalid duration format. Use formats like: 1d, 2h, 30m, 1w");
+        // Parse duration
+        long durationMillis;
+        try {
+            durationMillis = PunishmentManager.parseDuration(durationStr);
+        } catch (NumberFormatException e) {
+            sendMessage(sender, "commands.invalid-duration");
             return true;
         }
 
-        getPlayerUUID(playerName).thenAccept(uuid -> {
+        getPlayerUUID(playerName, uuid -> {
             if (uuid == null) {
-                sendMessage(sender, "&cPlayer '" + playerName + "' not found.");
+                Map<String, String> placeholders = createPlaceholders("player", playerName);
+                sendMessage(sender, "commands.player-not-found", placeholders);
                 return;
             }
 
-            if (plugin.getPunishmentManager().isMuted(uuid)) {
-                sendMessage(sender, "&cPlayer '" + playerName + "' is already muted.");
-                return;
-            }
-
-            String operatorName = sender instanceof Player ? ((Player) sender).getName() : "Console";
-            String operatorUuid = sender instanceof Player ? ((Player) sender).getUniqueId().toString() : "00000000-0000-0000-0000-000000000000";
-            long expirationTime = Instant.now().getEpochSecond() + durationSeconds;
-
-            Punishment punishment = new Punishment();
-            punishment.setUuid(uuid);
-            punishment.setPlayerName(playerName);
-            punishment.setType(Punishment.PunishmentType.TEMPMUTE);
-            punishment.setReason(reason);
-            punishment.setOperatorUuid(operatorUuid);
-            punishment.setOperatorName(operatorName);
-            punishment.setExpirationTimestamp(expirationTime);
-
-            plugin.getPunishmentManager().addPunishment(punishment).thenRun(() -> {
-                sendMessage(sender, "&aPlayer '" + playerName + "' has been temporarily muted for " + formatDuration(durationSeconds) + ": " + reason);
-
-                Player target = Bukkit.getPlayer(uuid);
-                if (target != null && target.isOnline()) {
-                    target.sendMessage(formatMuteMessage(punishment));
+            // Check if already muted
+            plugin.getPunishmentManager().getActivePunishments(uuid).whenComplete((punishments, ex) -> {
+                if (ex != null) {
+                    sendMessage(sender, "errors.database-error");
+                    return;
                 }
+
+                boolean alreadyMuted = punishments.stream()
+                        .anyMatch(p -> p.getType().isMute() && p.isActive());
+
+                if (alreadyMuted) {
+                    Map<String, String> placeholders = createPlaceholders("player", playerName);
+                    sendMessage(sender, "mute.already-muted", placeholders);
+                    return;
+                }
+
+                // Save mute
+                plugin.getPunishmentManager().addTemporaryPunishment(
+                        uuid, playerName, null, PunishmentType.TEMPMUTE, reason, operator, durationMillis
+                ).whenComplete((v, ex2) -> {
+                    if (ex2 != null) {
+                        sendMessage(sender, "errors.database-error");
+                        return;
+                    }
+
+                    Player player = org.bukkit.Bukkit.getPlayer(uuid);
+                    if (player != null && player.isOnline()) {
+                        player.sendMessage(messages.getMessage("mute.tempmuted_message",
+                                createPlaceholders("reason", reason, "duration", durationStr)));
+                    }
+
+                    Map<String, String> placeholders = createPlaceholders("player", playerName, "duration", durationStr);
+                    sendMessage(sender, "mute.successfully-tempmuted", placeholders);
+
+                    Map<String, String> notifyPlaceholders = createPlaceholders(
+                            "player", playerName, "operator", operator, "reason", reason, "duration", durationStr);
+                    notifyOperators("tempmute-notification", notifyPlaceholders);
+
+                    sendConsoleMessage("player-muted",
+                            createPlaceholders("player", playerName, "reason", reason));
+                });
             });
         });
 
         return true;
-    }
-
-    @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (args.length == 1) {
-            return plugin.getPunishmentManager().getAllKnownPlayers().join().stream()
-                    .filter(name -> name.toLowerCase().startsWith(args[0].toLowerCase()))
-                    .limit(20)
-                    .collect(Collectors.toList());
-        } else if (args.length == 2) {
-            return List.of("1m", "5m", "10m", "30m", "1h", "2h", "6h", "12h", "1d", "3d", "1w", "2w");
-        }
-        return List.of();
-    }
-
-    private String formatMuteMessage(Punishment punishment) {
-        String message = plugin.getConfigManager().getMuteMessageFormat();
-        message = message.replace("%reason%", punishment.getReason());
-        message = message.replace("%operator%", punishment.getOperatorName());
-        message = message.replace("%expiration%", punishment.getDurationString());
-        return org.bukkit.ChatColor.translateAlternateColorCodes('&', message);
     }
 }

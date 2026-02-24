@@ -1,30 +1,68 @@
 package dev.insanmiy.trueban.storage;
 
-import dev.insanmiy.trueban.models.Punishment;
+import dev.insanmiy.trueban.punishment.Punishment;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Interface for storage operations - all operations are asynchronous
+ */
 public interface StorageManager {
 
+    /**
+     * Check if the storage is ready and connected
+     */
+    boolean isReady();
+
+    /**
+     * Close storage connections
+     */
+    void close();
+
+    /**
+     * Save a new punishment to storage
+     */
     CompletableFuture<Void> savePunishment(Punishment punishment);
 
-    CompletableFuture<Punishment> getPunishment(UUID uuid);
+    /**
+     * Update an existing punishment
+     */
+    CompletableFuture<Void> updatePunishment(Punishment punishment);
 
-    CompletableFuture<List<Punishment>> getAllPunishments();
+    /**
+     * Get all active punishments for a player
+     */
+    CompletableFuture<List<Punishment>> getActivePunishments(UUID playerUUID);
 
-    CompletableFuture<List<Punishment>> getActivePunishments(UUID uuid);
+    /**
+     * Get punishment history for a player
+     */
+    CompletableFuture<List<Punishment>> getPunishmentHistory(UUID playerUUID);
 
-    CompletableFuture<Void> removePunishment(UUID uuid, Punishment.PunishmentType type);
+    /**
+     * Get a player's UUID from their username (from cache)
+     */
+    CompletableFuture<UUID> getOfflineUUID(String playerName);
 
-    CompletableFuture<UUID> getOfflinePlayerUUID(String playerName);
+    /**
+     * Get all known player names
+     */
+    CompletableFuture<List<String>> getKnownPlayerNames();
 
-    CompletableFuture<String> getPlayerName(UUID uuid);
+    /**
+     * Get all punishments by IP address
+     */
+    CompletableFuture<List<Punishment>> getPunishmentsByIP(String ipAddress);
 
-    CompletableFuture<List<String>> getAllKnownPlayers();
+    /**
+     * Delete a punishment (mark as inactive)
+     */
+    CompletableFuture<Void> deletePunishment(UUID playerUUID, int punishmentIndex);
 
-    CompletableFuture<Void> initialize();
-
-    CompletableFuture<Void> shutdown();
+    /**
+     * Clear all data (use with caution)
+     */
+    CompletableFuture<Void> clearAll();
 }

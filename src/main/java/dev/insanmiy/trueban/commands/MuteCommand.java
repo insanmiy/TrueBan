@@ -1,90 +1,91 @@
 package dev.insanmiy.trueban.commands;
 
 import dev.insanmiy.trueban.TrueBan;
-import dev.insanmiy.trueban.models.Punishment;
-import org.bukkit.Bukkit;
+import dev.insanmiy.trueban.punishment.PunishmentType;
 import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
-public class MuteCommand extends CommandBase {
+/**
+ * /mute <player> <reason>
+ */
+public class MuteCommand extends CommandBase implements CommandExecutor {
 
     public MuteCommand(TrueBan plugin) {
         super(plugin);
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!hasPermission(sender, "trueban.mute")) {
-            sendMessage(sender, "&cYou don't have permission to use this command.");
+    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+        if (!checkPermission(sender, "trueban.mute")) {
             return true;
         }
 
         if (args.length < 2) {
-            sendMessage(sender, "&cUsage: /mute <player> <reason>");
+            sendMessage(sender, "commands.invalid-syntax",
+                    createPlaceholders("usage", "/mute <player> <reason>"));
             return true;
         }
 
         String playerName = args[0];
-        String reason = Arrays.stream(Arrays.copyOfRange(args, 1, args.length))
-                .collect(Collectors.joining(" "));
+        String reason = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+        String operator = sender.getName();
 
-        getPlayerUUID(playerName).thenAccept(uuid -> {
+        getPlayerUUID(playerName, uuid -> {
             if (uuid == null) {
-                sendMessage(sender, "&cPlayer '" + playerName + "' not found.");
+                Map<String, String> placeholders = createPlaceholders("player", playerName);
+                sendMessage(sender, "commands.player-not-found", placeholders);
                 return;
             }
 
-            if (plugin.getPunishmentManager().isMuted(uuid)) {
-                sendMessage(sender, "&cPlayer '" + playerName + "' is already muted.");
-                return;
-            }
-
-            String operatorName = sender instanceof Player ? ((Player) sender).getName() : "Console";
-            String operatorUuid = sender instanceof Player ? ((Player) sender).getUniqueId().toString() : "00000000-0000-0000-0000-000000000000";
-
-            Punishment punishment = new Punishment();
-            punishment.setUuid(uuid);
-            punishment.setPlayerName(playerName);
-            punishment.setType(Punishment.PunishmentType.MUTE);
-            punishment.setReason(reason);
-            punishment.setOperatorUuid(operatorUuid);
-            punishment.setOperatorName(operatorName);
-            punishment.setExpirationTimestamp(-1);
-
-            plugin.getPunishmentManager().addPunishment(punishment).thenRun(() -> {
-                sendMessage(sender, "&aPlayer '" + playerName + "' has been muted for: " + reason);
-
-                Player target = Bukkit.getPlayer(uuid);
-                if (target != null && target.isOnline()) {
-                    target.sendMessage(formatMuteMessage(punishment));
+            // Check if already muted
+            plugin.getPunishmentManager().getActivePunishments(uuid).whenComplete((punishments, ex) -> {
+                if (ex != null) {
+                    sendMessage(sender, "errors.database-error");
+                    return;
                 }
+
+                boolean alreadyMuted = punishments.stream()
+                        .anyMatch(p -> p.getType().isMute() && p.isActive());
+
+                if (alreadyMuted) {
+                    Map<String, String> placeholders = createPlaceholders("player", playerName);
+                    sendMessage(sender, "mute.already-muted", placeholders);
+                    return;
+                }
+
+                // Save mute
+                plugin.getPunishmentManager().addPermanentPunishment(
+                        uuid, playerName, null, PunishmentType.MUTE, reason, operator
+                ).whenComplete((v, ex2) -> {
+                    if (ex2 != null) {
+                        sendMessage(sender, "errors.database-error");
+                        return;
+                    }
+
+                    Player player = org.bukkit.Bukkit.getPlayer(uuid);
+                    if (player != null && player.isOnline()) {
+                        player.sendMessage(messages.getMessage("mute.muted_message",
+                                createPlaceholders("reason", reason)));
+                    }
+
+                    Map<String, String> placeholders = createPlaceholders("player", playerName);
+                    sendMessage(sender, "mute.successfully-muted", placeholders);
+
+                    Map<String, String> notifyPlaceholders = createPlaceholders(
+                            "player", playerName, "operator", operator, "reason", reason);
+                    notifyOperators("mute-notification", notifyPlaceholders);
+
+                    sendConsoleMessage("player-muted",
+                            createPlaceholders("player", playerName, "reason", reason));
+                });
             });
         });
 
         return true;
-    }
-
-    @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (args.length == 1) {
-            return plugin.getPunishmentManager().getAllKnownPlayers().join().stream()
-                    .filter(name -> name.toLowerCase().startsWith(args[0].toLowerCase()))
-                    .limit(20)
-                    .collect(Collectors.toList());
-        }
-        return List.of();
-    }
-
-    private String formatMuteMessage(Punishment punishment) {
-        String message = plugin.getConfigManager().getMuteMessageFormat();
-        message = message.replace("%reason%", punishment.getReason());
-        message = message.replace("%operator%", punishment.getOperatorName());
-        message = message.replace("%expiration%", "Never");
-        return org.bukkit.ChatColor.translateAlternateColorCodes('&', message);
     }
 }

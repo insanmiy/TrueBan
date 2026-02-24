@@ -1,20 +1,24 @@
-C:\Github Projects\TrueBan\src\main\java\dev\insanmiy\trueban\storage\StorageManager.java
-C:\Github Projects\TrueBan\src\main\java\dev\insanmiy\trueban\commands\UnmuteCommand.java
-C:\Github Projects\TrueBan\src\main\java\dev\insanmiy\trueban\commands\TempMuteCommand.java
-C:\Github Projects\TrueBan\src\main\java\dev\insanmiy\trueban\commands\BanCommand.java
-C:\Github Projects\TrueBan\src\main\java\dev\insanmiy\trueban\storage\SQLiteStorage.java
-C:\Github Projects\TrueBan\src\main\java\dev\insanmiy\trueban\commands\CommandBase.java
-C:\Github Projects\TrueBan\src\main\java\dev\insanmiy\trueban\commands\KickCommand.java
-C:\Github Projects\TrueBan\src\main\java\dev\insanmiy\trueban\commands\TempBanCommand.java
-C:\Github Projects\TrueBan\src\main\java\dev\insanmiy\trueban\listeners\LoginListener.java
-C:\Github Projects\TrueBan\src\main\java\dev\insanmiy\trueban\commands\MuteCommand.java
-C:\Github Projects\TrueBan\src\main\java\dev\insanmiy\trueban\managers\PunishmentManager.java
-C:\Github Projects\TrueBan\src\main\java\dev\insanmiy\trueban\commands\HistoryCommand.java
-C:\Github Projects\TrueBan\src\main\java\dev\insanmiy\trueban\storage\JsonStorage.java
-C:\Github Projects\TrueBan\src\main\java\dev\insanmiy\trueban\commands\IpBanCommand.java
-C:\Github Projects\TrueBan\src\main\java\dev\insanmiy\trueban\commands\UnbanCommand.java
-C:\Github Projects\TrueBan\src\main\java\dev\insanmiy\trueban\TrueBan.java
-C:\Github Projects\TrueBan\src\main\java\dev\insanmiy\trueban\managers\ConfigManager.java
-C:\Github Projects\TrueBan\src\main\java\dev\insanmiy\trueban\storage\MySQLStorage.java
-C:\Github Projects\TrueBan\src\main\java\dev\insanmiy\trueban\listeners\ChatListener.java
-C:\Github Projects\TrueBan\src\main\java\dev\insanmiy\trueban\models\Punishment.java
+C:\Github.Projects\TrueBan\src\main\java\dev\insanmiy\trueban\commands\BanCommand.java
+C:\Github.Projects\TrueBan\src\main\java\dev\insanmiy\trueban\commands\CommandBase.java
+C:\Github.Projects\TrueBan\src\main\java\dev\insanmiy\trueban\commands\HistoryCommand.java
+C:\Github.Projects\TrueBan\src\main\java\dev\insanmiy\trueban\commands\IpbanCommand.java
+C:\Github.Projects\TrueBan\src\main\java\dev\insanmiy\trueban\commands\IpTabCompleter.java
+C:\Github.Projects\TrueBan\src\main\java\dev\insanmiy\trueban\commands\KickCommand.java
+C:\Github.Projects\TrueBan\src\main\java\dev\insanmiy\trueban\commands\MuteCommand.java
+C:\Github.Projects\TrueBan\src\main\java\dev\insanmiy\trueban\commands\PlayerListTabCompleter.java
+C:\Github.Projects\TrueBan\src\main\java\dev\insanmiy\trueban\commands\TempbanCommand.java
+C:\Github.Projects\TrueBan\src\main\java\dev\insanmiy\trueban\commands\TempmuteCommand.java
+C:\Github.Projects\TrueBan\src\main\java\dev\insanmiy\trueban\commands\UnbanCommand.java
+C:\Github.Projects\TrueBan\src\main\java\dev\insanmiy\trueban\commands\UnbanTabCompleter.java
+C:\Github.Projects\TrueBan\src\main\java\dev\insanmiy\trueban\commands\UnmuteCommand.java
+C:\Github.Projects\TrueBan\src\main\java\dev\insanmiy\trueban\config\ConfigManager.java
+C:\Github.Projects\TrueBan\src\main\java\dev\insanmiy\trueban\config\MessageManager.java
+C:\Github.Projects\TrueBan\src\main\java\dev\insanmiy\trueban\listeners\PlayerChatListener.java
+C:\Github.Projects\TrueBan\src\main\java\dev\insanmiy\trueban\listeners\PlayerLoginListener.java
+C:\Github.Projects\TrueBan\src\main\java\dev\insanmiy\trueban\punishment\Punishment.java
+C:\Github.Projects\TrueBan\src\main\java\dev\insanmiy\trueban\punishment\PunishmentManager.java
+C:\Github.Projects\TrueBan\src\main\java\dev\insanmiy\trueban\punishment\PunishmentType.java
+C:\Github.Projects\TrueBan\src\main\java\dev\insanmiy\trueban\storage\MysqlStorage.java
+C:\Github.Projects\TrueBan\src\main\java\dev\insanmiy\trueban\storage\SqliteStorage.java
+C:\Github.Projects\TrueBan\src\main\java\dev\insanmiy\trueban\storage\StorageManager.java
+C:\Github.Projects\TrueBan\src\main\java\dev\insanmiy\trueban\TrueBan.java

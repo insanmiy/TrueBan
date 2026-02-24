@@ -1,87 +1,119 @@
 package dev.insanmiy.trueban.commands;
 
 import dev.insanmiy.trueban.TrueBan;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
+import dev.insanmiy.trueban.config.MessageManager;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Player;
 
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
+import java.util.HashMap;
+import java.util.Map;
 
-public abstract class CommandBase implements CommandExecutor, TabCompleter {
+/**
+ * Abstract base class for all commands
+ */
+public abstract class CommandBase {
+
     protected final TrueBan plugin;
+    protected final MessageManager messages;
 
     public CommandBase(TrueBan plugin) {
         this.plugin = plugin;
+        this.messages = plugin.getMessageManager();
     }
 
-    public abstract boolean onCommand(CommandSender sender, Command command, String label, String[] args);
-    public abstract List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args);
-
-    protected boolean hasPermission(CommandSender sender, String permission) {
-        return sender.hasPermission(permission);
+    /**
+     * Send a message to command sender
+     */
+    protected void sendMessage(CommandSender sender, String messageKey, Map<String, String> placeholders) {
+        String message = messages.getMessage(messageKey, placeholders);
+        sender.sendMessage(message);
     }
 
-    protected void sendMessage(CommandSender sender, String message) {
-        sender.sendMessage(org.bukkit.ChatColor.translateAlternateColorCodes('&', message));
+    /**
+     * Send a prefixed message
+     */
+    protected void sendMessage(CommandSender sender, String messageKey) {
+        String message = messages.getMessage(messageKey);
+        sender.sendMessage(message);
     }
 
-    protected CompletableFuture<UUID> getPlayerUUID(String playerName) {
-        return plugin.getPunishmentManager().getPlayerUUID(playerName);
-    }
-
-    protected CompletableFuture<String> getPlayerName(UUID uuid) {
-        return plugin.getPunishmentManager().getPlayerName(uuid);
-    }
-
-    protected long parseDuration(String duration) {
-        if (duration.equalsIgnoreCase("permanent") || duration.equalsIgnoreCase("perm")) {
-            return -1;
+    /**
+     * Notify operators about an action
+     */
+    protected void notifyOperators(String messageKey, Map<String, String> placeholders) {
+        if (!messages.hasMessage("notifications." + messageKey)) {
+            return;
         }
 
-        long seconds = 0;
-        String[] parts = duration.toLowerCase().split("(?<=\\d)(?=\\D)|(?<=\\D)(?=\\d)");
+        String message = messages.getMessage("notifications." + messageKey, placeholders);
 
-        for (int i = 0; i < parts.length; i += 2) {
-            if (i + 1 >= parts.length) break;
+        Bukkit.getOnlinePlayers().stream()
+                .filter(p -> p.hasPermission("trueban.notify"))
+                .forEach(p -> p.sendMessage(message));
 
-            try {
-                int amount = Integer.parseInt(parts[i]);
-                String unit = parts[i + 1];
+        Bukkit.getConsoleSender().sendMessage(message);
+    }
 
-                switch (unit) {
-                    case "s", "sec", "seconds", "second" -> seconds += amount;
-                    case "m", "min", "minutes", "minute" -> seconds += amount * 60L;
-                    case "h", "hour", "hours" -> seconds += amount * 3600L;
-                    case "d", "day", "days" -> seconds += amount * 86400L;
-                    case "w", "week", "weeks" -> seconds += amount * 604800L;
-                    case "mo", "month", "months" -> seconds += amount * 2592000L;
-                    case "y", "year", "years" -> seconds += amount * 31536000L;
-                }
-            } catch (NumberFormatException e) {
-                return -1;
+    /**
+     * Send console message
+     */
+    protected void sendConsoleMessage(String messageKey, Map<String, String> placeholders) {
+        String message = messages.getMessage("console." + messageKey, placeholders);
+        Bukkit.getConsoleSender().sendMessage(message);
+    }
+
+    /**
+     * Check permission and send no-permission message if needed
+     */
+    protected boolean checkPermission(CommandSender sender, String permission) {
+        if (!sender.hasPermission(permission)) {
+            sendMessage(sender, "commands.no-permission");
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Create a placeholder map with common data
+     */
+    protected Map<String, String> createPlaceholders(String... keyValuePairs) {
+        Map<String, String> map = new HashMap<>();
+        for (int i = 0; i < keyValuePairs.length; i += 2) {
+            if (i + 1 < keyValuePairs.length) {
+                map.put(keyValuePairs[i], keyValuePairs[i + 1]);
             }
         }
-
-        return seconds > 0 ? seconds : -1;
+        return map;
     }
 
-    protected String formatDuration(long seconds) {
-        if (seconds <= 0) return "Permanent";
+    /**
+     * Get a player by name (online first, then try to find UUID)
+     */
+    protected void getPlayerUUID(String playerName, java.util.function.Consumer<java.util.UUID> callback) {
+        Player onlinePlayer = Bukkit.getPlayer(playerName);
+        if (onlinePlayer != null) {
+            callback.accept(onlinePlayer.getUniqueId());
+            return;
+        }
 
-        long days = seconds / 86400;
-        long hours = (seconds % 86400) / 3600;
-        long minutes = (seconds % 3600) / 60;
-        long secs = seconds % 60;
+        // Try to get offline UUID
+        plugin.getPunishmentManager().getPlayerUUID(playerName).whenComplete((uuid, ex) -> {
+            if (ex != null || uuid == null) {
+                callback.accept(null);
+            } else {
+                callback.accept(uuid);
+            }
+        });
+    }
 
-        StringBuilder sb = new StringBuilder();
-        if (days > 0) sb.append(days).append("d ");
-        if (hours > 0) sb.append(hours).append("h ");
-        if (minutes > 0) sb.append(minutes).append("m ");
-        if (secs > 0) sb.append(secs).append("s");
-
-        return sb.toString().trim();
+    /**
+     * Get player IP address
+     */
+    protected String getPlayerIP(CommandSender sender) {
+        if (sender instanceof Player player) {
+            return player.getAddress().getAddress().getHostAddress();
+        }
+        return null;
     }
 }

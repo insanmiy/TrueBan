@@ -1,62 +1,41 @@
 # TrueBan Configuration File
-# Choose your storage type: JSON, SQLITE, or MYSQL
-# JSON is the default storage type, it is easy to read but is only recommended for small servers (1-100 players)
-# SQlite is a light-weight database that doesn't require a separate server, it is recommended for medium servers (101-200 players)
-# MySQL is a full-featured database that requires a separate server, it is recommended for large servers (201+ players)
+# Storage configuration
 storage:
+  # Options: JSON, SQLITE, MYSQL
   type: JSON
-  
-  # SQLite configuration (only used when type is SQLITE)
-  sqlite:
-    file-path: "plugins/TrueBan/punishments.db"
-  
-  # MySQL configuration (only used when type is MYSQL)
-  mysql:
-    host: "localhost"
-    port: 3306
-    database: "minecraft"
-    username: "root"
-    password: ""
 
-# Message configuration
-# Available placeholders: %reason%, %operator%, %expiration%, %appeal%
-messages:
-  ban: |
-    &cYou have been banned from this server!
-    
-    &7Reason: &f%reason%
-    &7Banned by: &f%operator%
-    &7Expires: &f%expiration%
-    
-    &7Appeal at: &f%appeal%
-  
-  mute: |
-    &cYou are muted and cannot chat!
-    
-    &7Reason: &f%reason%
-    &7Muted by: &f%operator%
-    &7Expires: &f%expiration%
-  
-  kick: |
-    &cYou have been kicked from the server!
-    
-    &7Reason: &f%reason%
-    &7Kicked by: &f%operator%
-  
-  appeal-url: "https://example.com/appeal"
+# SQLite Configuration (used when storage.type is SQLITE)
+sqlite:
+  file: trueban.db
 
-# Plugin settings
+# MySQL Configuration (used when storage.type is MYSQL)
+mysql:
+  host: localhost
+  port: 3306
+  database: trueban
+  username: root
+  password: password
+  # Connection pool settings
+  pool:
+    max-size: 10
+    min-idle: 2
+    connection-timeout-seconds: 30
+    idle-timeout-seconds: 600
+
+# Plugin Settings
 settings:
-  # Notify staff members with trueban.notify permission when punishments are issued
-  notify-staff: true
+  # Check for expired punishments every X seconds
+  check-expiration-interval-seconds: 30
   
-  # Log punishments to console
-  log-punishments: true
+  # Number of async threads for database operations
+  async-threads: 2
   
-  # How often (in seconds) to check for expired temporary punishments
-  expiration-check-interval: 60
-  
-  # Permissions that allow bypassing punishments
-  bypass-permissions:
-    - "trueban.bypass"
-    - "essentials.bypass"
+  # Enable debug logging
+  debug: false
+
+# Duration format examples:
+# 30s = 30 seconds
+# 5m = 5 minutes
+# 2h = 2 hours
+# 1d = 1 day
+# 4w = 4 weeks

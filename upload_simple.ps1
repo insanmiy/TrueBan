@@ -25,7 +25,8 @@ try {
 
     # Commit changes
     Write-Host "Committing changes..."
-    git commit -m "Initial commit: TrueBan v1.0.0 - Production-ready Minecraft moderation plugin"
+    $commitMessage = Read-Host "Enter commit message"
+    git commit -m $commitMessage
 
     # Push to GitHub
     Write-Host "Pushing to GitHub..."

@@ -1,117 +1,98 @@
 package dev.insanmiy.trueban.commands;
 
 import dev.insanmiy.trueban.TrueBan;
-import dev.insanmiy.trueban.models.Punishment;
+import dev.insanmiy.trueban.punishment.PunishmentType;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import java.util.Map;
 
-public class IpBanCommand extends CommandBase {
+/**
+ * /ipban <player|ip> <reason>
+ */
+public class IpbanCommand extends CommandBase implements CommandExecutor {
 
-    private static final Pattern IP_PATTERN = Pattern.compile("^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$");
-
-    public IpBanCommand(TrueBan plugin) {
+    public IpbanCommand(TrueBan plugin) {
         super(plugin);
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!hasPermission(sender, "trueban.ipban")) {
-            sendMessage(sender, "&cYou don't have permission to use this command.");
+    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+        if (!checkPermission(sender, "trueban.ipban")) {
             return true;
         }
 
         if (args.length < 2) {
-            sendMessage(sender, "&cUsage: /ipban <player|IP> <reason>");
+            sendMessage(sender, "commands.invalid-syntax",
+                    createPlaceholders("usage", "/ipban <player|ip> <reason>"));
             return true;
         }
 
         String target = args[0];
-        String reason = Arrays.stream(Arrays.copyOfRange(args, 1, args.length))
-                .collect(Collectors.joining(" "));
+        String reason = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+        String operator = sender.getName();
 
-        if (IP_PATTERN.matcher(target).matches()) {
-            handleIPBan(sender, target, reason, null);
+        String ipAddress;
+
+        // Check if target is IP or player name
+        if (isIPAddress(target)) {
+            ipAddress = target;
         } else {
-            handlePlayerIPBan(sender, target, reason);
+            // Get IP from online player
+            Player player = Bukkit.getPlayer(target);
+            if (player != null) {
+                ipAddress = player.getAddress().getAddress().getHostAddress();
+                player.kickPlayer(
+                    messages.getMessage("ban.ipban_message",
+                            createPlaceholders("reason", reason, "operator", operator, "ip", ipAddress))
+                );
+            } else {
+                Map<String, String> placeholders = createPlaceholders("player", target);
+                sendMessage(sender, "commands.player-not-found", placeholders);
+                return true;
+            }
         }
+
+        // Save IP ban for multiple UUIDs that match this IP
+        plugin.getStorageManager().getPunishmentsByIP(ipAddress).whenComplete((existing, ex) -> {
+            if (ex != null) {
+                sendMessage(sender, "errors.database-error");
+                return;
+            }
+
+            // Create IP ban punishment
+            plugin.getPunishmentManager().addPermanentPunishment(
+                    java.util.UUID.randomUUID(), "IPBan-" + ipAddress, ipAddress, 
+                    PunishmentType.IPBAN, reason, operator
+            ).whenComplete((v, ex2) -> {
+                if (ex2 != null) {
+                    sendMessage(sender, "errors.database-error");
+                    return;
+                }
+
+                Map<String, String> placeholders = createPlaceholders("ip", ipAddress);
+                sendMessage(sender, "ban.successfully-ipbanned", placeholders);
+
+                Map<String, String> notifyPlaceholders = createPlaceholders(
+                        "ip", ipAddress, "operator", operator, "reason", reason);
+                notifyOperators("ban-notification", notifyPlaceholders);
+
+                sendConsoleMessage("ip-banned",
+                        createPlaceholders("ip", ipAddress, "reason", reason));
+            });
+        });
 
         return true;
     }
 
-    private void handlePlayerIPBan(CommandSender sender, String playerName, String reason) {
-        getPlayerUUID(playerName).thenAccept(uuid -> {
-            if (uuid == null) {
-                sendMessage(sender, "&cPlayer '" + playerName + "' not found.");
-                return;
-            }
-
-            Player player = Bukkit.getPlayer(uuid);
-            if (player != null && player.isOnline()) {
-                String ipAddress = player.getAddress().getAddress().getHostAddress();
-                handleIPBan(sender, ipAddress, reason, uuid);
-            } else {
-                sendMessage(sender, "&cPlayer '" + playerName + "' must be online to IP ban.");
-            }
-        });
-    }
-
-    private void handleIPBan(CommandSender sender, String ipAddress, String reason, UUID playerUuid) {
-        String operatorName = sender instanceof Player ? ((Player) sender).getName() : "Console";
-        String operatorUuid = sender instanceof Player ? ((Player) sender).getUniqueId().toString() : "00000000-0000-0000-0000-000000000000";
-
-        Punishment punishment = new Punishment();
-        punishment.setUuid(playerUuid != null ? playerUuid : UUID.fromString("00000000-0000-0000-0000-000000000000"));
-        punishment.setPlayerName(playerUuid != null ? Bukkit.getOfflinePlayer(playerUuid).getName() : "Unknown");
-        punishment.setIpAddress(ipAddress);
-        punishment.setType(Punishment.PunishmentType.IPBAN);
-        punishment.setReason(reason);
-        punishment.setOperatorUuid(operatorUuid);
-        punishment.setOperatorName(operatorName);
-        punishment.setExpirationTimestamp(-1);
-
-        plugin.getPunishmentManager().addPunishment(punishment).thenRun(() -> {
-            sendMessage(sender, "&aIP address '" + ipAddress + "' has been banned for: " + reason);
-
-            if (playerUuid != null) {
-                Player target = Bukkit.getPlayer(playerUuid);
-                if (target != null && target.isOnline()) {
-                    target.kickPlayer(formatBanMessage(punishment));
-                }
-            }
-        });
-    }
-
-    @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (args.length == 1) {
-            List<String> players = plugin.getPunishmentManager().getAllKnownPlayers().join().stream()
-                    .filter(name -> name.toLowerCase().startsWith(args[0].toLowerCase()))
-                    .limit(20)
-                    .collect(Collectors.toList());
-
-            if (args[0].contains(".")) {
-                players.add(args[0]);
-            }
-
-            return players;
-        }
-        return List.of();
-    }
-
-    private String formatBanMessage(Punishment punishment) {
-        String message = plugin.getConfigManager().getBanMessageFormat();
-        message = message.replace("%reason%", punishment.getReason());
-        message = message.replace("%operator%", punishment.getOperatorName());
-        message = message.replace("%expiration%", "Never");
-        message = message.replace("%appeal%", plugin.getConfigManager().getAppealURL());
-        return org.bukkit.ChatColor.translateAlternateColorCodes('&', message);
+    /**
+     * Check if string is an IP address
+     */
+    private boolean isIPAddress(String str) {
+        return str.matches("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
     }
 }
