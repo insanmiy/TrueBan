@@ -11,9 +11,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Manages message loading and formatting with placeholder support
- */
 public class MessageManager {
 
     private final JavaPlugin plugin;
@@ -26,9 +23,6 @@ public class MessageManager {
         this.messagesData = new HashMap<>();
     }
 
-    /**
-     * Load messages from messages.yml
-     */
     public void loadMessages() throws IOException {
         File messagesFile = new File(plugin.getDataFolder(), "messages.yml");
         Yaml yaml = new Yaml();
@@ -42,34 +36,21 @@ public class MessageManager {
         }
     }
 
-    /**
-     * Get a message by path with color code conversion
-     * Path format: "commands.no-permission"
-     */
     public String getMessage(String path) {
         return formatMessage(getMessageRaw(path));
     }
 
-    /**
-     * Get a message by path and replace placeholders
-     */
     public String getMessage(String path, Map<String, String> placeholders) {
         String message = getMessage(path);
         return replacePlaceholders(message, placeholders);
     }
 
-    /**
-     * Get a message by path and replace a single placeholder
-     */
     public String getMessage(String path, String placeholder, String value) {
         Map<String, String> placeholders = new HashMap<>();
         placeholders.put(placeholder, value);
         return getMessage(path, placeholders);
     }
 
-    /**
-     * Get raw message without formatting
-     */
     private String getMessageRaw(String path) {
         Map<String, Object> current = messagesData;
         String[] keys = path.split("\\.");
@@ -79,7 +60,6 @@ public class MessageManager {
             if (obj instanceof Map) {
                 current = (Map<String, Object>) obj;
             } else {
-                return path; // Return path if not found for debugging
             }
         }
 
@@ -87,16 +67,11 @@ public class MessageManager {
         return value != null ? value.toString() : path;
     }
 
-    /**
-     * Format message by converting color codes
-     * & codes are converted to § codes
-     */
     private String formatMessage(String message) {
         if (message == null || message.isEmpty()) {
             return "";
         }
 
-        // Convert & color codes to § codes
         Matcher matcher = colorPattern.matcher(message);
         StringBuffer sb = new StringBuffer();
 
@@ -108,10 +83,6 @@ public class MessageManager {
         return sb.toString();
     }
 
-    /**
-     * Replace placeholders in message
-     * %placeholder% format
-     */
     private String replacePlaceholders(String message, Map<String, String> placeholders) {
         if (message == null || placeholders == null || placeholders.isEmpty()) {
             return message;
@@ -127,30 +98,18 @@ public class MessageManager {
         return result;
     }
 
-    /**
-     * Get the plugin prefix
-     */
     public String getPrefix() {
         return getMessage("prefix");
     }
 
-    /**
-     * Create a prefixed message
-     */
     public String getPrefixedMessage(String message) {
         return getPrefix() + " " + message;
     }
 
-    /**
-     * Get messages data
-     */
     public Map<String, Object> getMessagesData() {
         return messagesData;
     }
 
-    /**
-     * Check if a message path exists
-     */
     public boolean hasMessage(String path) {
         Map<String, Object> current = messagesData;
         String[] keys = path.split("\\.");

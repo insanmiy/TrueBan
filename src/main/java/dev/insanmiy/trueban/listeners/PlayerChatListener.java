@@ -11,9 +11,6 @@ import org.bukkit.event.Listener;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Listener for player chat - checks for mutes
- */
 public class PlayerChatListener implements Listener {
 
     private final TrueBan plugin;
@@ -24,18 +21,13 @@ public class PlayerChatListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerChat(AsyncChatEvent event) {
-        // Check if player has bypass permission
         if (event.getPlayer().hasPermission("trueban.bypass")) {
             return;
         }
 
-        // Check for mutes
         checkMute(event);
     }
 
-    /**
-     * Check if player is muted
-     */
     private void checkMute(AsyncChatEvent event) {
         plugin.getPunishmentManager().getActivePunishments(event.getPlayer().getUniqueId())
                 .whenComplete((punishments, ex) -> {
@@ -58,9 +50,6 @@ public class PlayerChatListener implements Listener {
                 });
     }
 
-    /**
-     * Get mute message with placeholders
-     */
     private java.util.concurrent.CompletableFuture<String> getMuteMessage(Punishment punishment) {
         return java.util.concurrent.CompletableFuture.supplyAsync(() -> {
             Map<String, String> placeholders = new HashMap<>();
@@ -77,9 +66,6 @@ public class PlayerChatListener implements Listener {
         });
     }
 
-    /**
-     * Format duration
-     */
     private String formatDuration(long milliseconds) {
         if (milliseconds <= 0) {
             return "expired";

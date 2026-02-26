@@ -11,9 +11,6 @@ import org.bukkit.entity.Player;
 import java.util.Arrays;
 import java.util.Map;
 
-/**
- * /tempmute <player> <duration> <reason>
- */
 public class TempmuteCommand extends CommandBase implements CommandExecutor {
 
     public TempmuteCommand(TrueBan plugin) {
@@ -37,7 +34,6 @@ public class TempmuteCommand extends CommandBase implements CommandExecutor {
         String reason = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
         String operator = sender.getName();
 
-        // Parse duration
         long durationMillis;
         try {
             durationMillis = PunishmentManager.parseDuration(durationStr);
@@ -53,7 +49,6 @@ public class TempmuteCommand extends CommandBase implements CommandExecutor {
                 return;
             }
 
-            // Check if already muted
             plugin.getPunishmentManager().getActivePunishments(uuid).whenComplete((punishments, ex) -> {
                 if (ex != null) {
                     sendMessage(sender, "errors.database-error");
@@ -69,7 +64,6 @@ public class TempmuteCommand extends CommandBase implements CommandExecutor {
                     return;
                 }
 
-                // Save mute
                 plugin.getPunishmentManager().addTemporaryPunishment(
                         uuid, playerName, null, PunishmentType.TEMPMUTE, reason, operator, durationMillis
                 ).whenComplete((v, ex2) -> {

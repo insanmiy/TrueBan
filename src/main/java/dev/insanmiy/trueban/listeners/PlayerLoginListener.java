@@ -12,9 +12,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 
-/**
- * Listener for player login - checks for bans and IP bans
- */
 public class PlayerLoginListener implements Listener {
 
     private final TrueBan plugin;
@@ -25,19 +22,14 @@ public class PlayerLoginListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerLogin(PlayerLoginEvent event) {
-        // Check if player has bypass permission
         if (event.getPlayer().hasPermission("trueban.bypass")) {
             return;
         }
 
-        // Check for bans
         checkBan(event);
         checkIPBan(event);
     }
 
-    /**
-     * Check if player UUID is banned
-     */
     private void checkBan(PlayerLoginEvent event) {
         try {
             List<Punishment> punishments = plugin.getPunishmentManager()
@@ -54,9 +46,6 @@ public class PlayerLoginListener implements Listener {
         }
     }
 
-    /**
-     * Check if player IP is banned
-     */
     private void checkIPBan(PlayerLoginEvent event) {
         String ipAddress = event.getAddress().getHostAddress();
         try {
@@ -64,6 +53,10 @@ public class PlayerLoginListener implements Listener {
 
             for (Punishment p : punishments) {
                 if (p.getType() == PunishmentType.IPBAN && p.isActive()) {
+                    plugin.getLogger().warning("IP-banned player attempted to join: " + event.getPlayer().getName());
+                    plugin.getLogger().warning("Reason: " + p.getReason());
+                    plugin.getLogger().warning("Banned by: " + p.getOperator());
+                    plugin.getLogger().warning("IP: " + p.getIpAddress());
                     event.disallow(PlayerLoginEvent.Result.KICK_BANNED, getIPBanMessage(p));
                     return;
                 }
@@ -73,9 +66,6 @@ public class PlayerLoginListener implements Listener {
         }
     }
 
-    /**
-     * Get ban message with placeholders
-     */
     private String getBanMessage(Punishment punishment) {
         Map<String, String> placeholders = new HashMap<>();
         placeholders.put("player", punishment.getPlayerName());
@@ -92,9 +82,6 @@ public class PlayerLoginListener implements Listener {
         }
     }
 
-    /**
-     * Get IP ban message
-     */
     private String getIPBanMessage(Punishment punishment) {
         Map<String, String> placeholders = new HashMap<>();
         placeholders.put("reason", punishment.getReason());
@@ -103,9 +90,6 @@ public class PlayerLoginListener implements Listener {
         return plugin.getMessageManager().getMessage("ban.ipban_message", placeholders);
     }
 
-    /**
-     * Format duration
-     */
     private String formatDuration(long milliseconds) {
         if (milliseconds <= 0) {
             return "expired";
@@ -127,9 +111,6 @@ public class PlayerLoginListener implements Listener {
         }
     }
 
-    /**
-     * Format date timestamp
-     */
     private String formatDate(long timestamp) {
         return new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(timestamp));
     }

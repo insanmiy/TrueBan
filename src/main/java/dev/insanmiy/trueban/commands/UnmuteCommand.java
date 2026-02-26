@@ -8,9 +8,6 @@ import org.bukkit.command.CommandSender;
 
 import java.util.Map;
 
-/**
- * /unmute <player>
- */
 public class UnmuteCommand extends CommandBase implements CommandExecutor {
 
     public UnmuteCommand(TrueBan plugin) {
@@ -38,7 +35,6 @@ public class UnmuteCommand extends CommandBase implements CommandExecutor {
                 return;
             }
 
-            // Get active mutes
             plugin.getPunishmentManager().getActivePunishments(uuid).whenComplete((punishments, ex) -> {
                 if (ex != null) {
                     sendMessage(sender, "errors.database-error");

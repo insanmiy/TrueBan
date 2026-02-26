@@ -1,44 +1,21 @@
-# Simple GitHub Upload Script for TrueBan
-# =====================================
-
-Write-Host "Uploading TrueBan to GitHub..." -ForegroundColor Cyan
-Write-Host "Starting in 3 seconds..." -ForegroundColor Yellow
-Start-Sleep -Seconds 3
+Write-Host "Uploading TrueBan..." -ForegroundColor Cyan
 
 try {
-    # Initialize git repository
     if (-not (Test-Path ".git")) {
-        Write-Host "Initializing git repository..."
         git init
         git branch -M main
-    } else {
-        Write-Host "Git repository already exists"
+        git remote add origin https://github.com/insanmiy/TrueBan.git
     }
 
-    # Add remote repository
-    Write-Host "Adding remote repository..."
-    git remote add origin https://github.com/insanmiy/TrueBan.git
-
-    # Add all files
-    Write-Host "Adding files..."
-    git add .
-
-    # Commit changes
-    Write-Host "Committing changes..."
-    $commitMessage = Read-Host "Enter commit message"
-    git commit -m $commitMessage
-
-    # Push to GitHub
-    Write-Host "Pushing to GitHub..."
+    git add -A
+    
+    # Using "." as a minimal message to avoid the "requires a value" error
+    git commit -m "."
+    
     git push -u origin main --force
-
-    Write-Host "Done! Your plugin is now at: https://github.com/insanmiy/TrueBan" -ForegroundColor Green
 }
 catch {
-    Write-Host "Error occurred: $($_.Exception.Message)" -ForegroundColor Red
-    Write-Host "Check if Git is installed and you have GitHub access" -ForegroundColor Yellow
+    Write-Host "Error: $($_.Exception.Message)" -ForegroundColor Red
 }
 
-Write-Host "Waiting 5 seconds before closing..." -ForegroundColor Yellow
-Start-Sleep -Seconds 5
-Write-Host "Finished!" -ForegroundColor Green
+Write-Host "Done!" -ForegroundColor Green

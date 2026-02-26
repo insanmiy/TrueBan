@@ -10,9 +10,6 @@ import org.bukkit.command.CommandSender;
 import java.util.List;
 import java.util.Map;
 
-/**
- * /unban <player|ip>
- */
 public class UnbanCommand extends CommandBase implements CommandExecutor {
 
     public UnbanCommand(TrueBan plugin) {
@@ -33,7 +30,6 @@ public class UnbanCommand extends CommandBase implements CommandExecutor {
 
         String target = args[0];
 
-        // Check if it's an IP address
         if (isIPAddress(target)) {
             unbanIP(sender, target);
         } else {
@@ -43,9 +39,6 @@ public class UnbanCommand extends CommandBase implements CommandExecutor {
         return true;
     }
 
-    /**
-     * Unban a player
-     */
     private void unbanPlayer(CommandSender sender, String playerName) {
         getPlayerUUID(playerName, uuid -> {
             if (uuid == null) {
@@ -54,7 +47,6 @@ public class UnbanCommand extends CommandBase implements CommandExecutor {
                 return;
             }
 
-            // Get active bans
             plugin.getPunishmentManager().getActivePunishments(uuid).whenComplete((punishments, ex) -> {
                 if (ex != null) {
                     sendMessage(sender, "errors.database-error");
@@ -62,11 +54,17 @@ public class UnbanCommand extends CommandBase implements CommandExecutor {
                 }
 
                 boolean found = false;
+                String ipFromPunishment = null;
+
                 for (Punishment p : punishments) {
                     if (p.getType().isBan()) {
                         p.setActive(false);
                         plugin.getStorageManager().updatePunishment(p);
                         found = true;
+
+                        if (p.getIpAddress() != null && !p.getIpAddress().isEmpty()) {
+                            ipFromPunishment = p.getIpAddress();
+                        }
                     }
                 }
 
@@ -74,6 +72,11 @@ public class UnbanCommand extends CommandBase implements CommandExecutor {
                     Map<String, String> placeholders = createPlaceholders("player", playerName);
                     sendMessage(sender, "unban.not-banned", placeholders);
                     return;
+                }
+
+                if (ipFromPunishment != null) {
+                    String finalIp = ipFromPunishment;
+                    unbanIP(sender, finalIp);
                 }
 
                 Map<String, String> placeholders = createPlaceholders("player", playerName);
@@ -89,9 +92,6 @@ public class UnbanCommand extends CommandBase implements CommandExecutor {
         });
     }
 
-    /**
-     * Unban an IP address
-     */
     private void unbanIP(CommandSender sender, String ipAddress) {
         plugin.getStorageManager().getPunishmentsByIP(ipAddress).whenComplete((punishments, ex) -> {
             if (ex != null) {
@@ -126,9 +126,6 @@ public class UnbanCommand extends CommandBase implements CommandExecutor {
         });
     }
 
-    /**
-     * Check if string is an IP address
-     */
     private boolean isIPAddress(String str) {
         return str.matches("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
     }

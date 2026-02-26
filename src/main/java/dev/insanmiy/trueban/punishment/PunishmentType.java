@@ -1,8 +1,5 @@
 package dev.insanmiy.trueban.punishment;
 
-/**
- * Enum representing different types of punishments
- */
 public enum PunishmentType {
     BAN("Ban", "a permanent ban"),
     TEMPBAN("Tempban", "a temporary ban"),
@@ -27,23 +24,14 @@ public enum PunishmentType {
         return description;
     }
 
-    /**
-     * Check if this is a temporary punishment
-     */
     public boolean isTemporary() {
         return this == TEMPBAN || this == TEMPMUTE;
     }
 
-    /**
-     * Check if this is a ban-type punishment
-     */
     public boolean isBan() {
         return this == BAN || this == TEMPBAN || this == IPBAN;
     }
 
-    /**
-     * Check if this is a mute-type punishment
-     */
     public boolean isMute() {
         return this == MUTE || this == TEMPMUTE;
     }

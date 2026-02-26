@@ -9,9 +9,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Map;
 
-/**
- * Manages configuration loading and access
- */
 public class ConfigManager {
 
     private final JavaPlugin plugin;
@@ -25,9 +22,6 @@ public class ConfigManager {
         this.plugin = plugin;
     }
 
-    /**
-     * Load all configuration files
-     */
     public void loadConfigs() throws IOException {
         saveDefaultConfigs();
 
@@ -41,9 +35,6 @@ public class ConfigManager {
         parseConfig();
     }
 
-    /**
-     * Load messages configuration
-     */
     public void loadMessages() throws IOException {
         File messagesFile = new File(plugin.getDataFolder(), "messages.yml");
         Yaml yaml = new Yaml();
@@ -53,9 +44,6 @@ public class ConfigManager {
         }
     }
 
-    /**
-     * Save default configuration files if they don't exist
-     */
     private void saveDefaultConfigs() throws IOException {
         File dataFolder = plugin.getDataFolder();
         if (!dataFolder.exists()) {
@@ -66,9 +54,6 @@ public class ConfigManager {
         saveResource("messages.yml");
     }
 
-    /**
-     * Save a resource from the jar to the file system
-     */
     private void saveResource(String resourceName) throws IOException {
         File file = new File(plugin.getDataFolder(), resourceName);
 
@@ -89,16 +74,12 @@ public class ConfigManager {
         }
     }
 
-    /**
-     * Parse configuration values
-     */
     private void parseConfig() {
         if (configData == null) {
             plugin.getLogger().warning("Config data is null!");
             return;
         }
 
-        // Parse storage type
         Map<String, Object> storage = (Map<String, Object>) configData.get("storage");
         if (storage != null) {
             storageType = (String) storage.getOrDefault("type", "JSON");
@@ -106,7 +87,6 @@ public class ConfigManager {
             storageType = "JSON";
         }
 
-        // Parse settings
         Map<String, Object> settings = (Map<String, Object>) configData.get("settings");
         if (settings != null) {
             Object intervalObj = settings.get("check-expiration-interval-seconds");
@@ -120,7 +100,6 @@ public class ConfigManager {
         }
     }
 
-    // Getters
 
     public String getStorageType() {
         return storageType;

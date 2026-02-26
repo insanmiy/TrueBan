@@ -2,9 +2,6 @@ package dev.insanmiy.trueban.punishment;
 
 import java.util.UUID;
 
-/**
- * Represents a punishment record
- */
 public class Punishment {
 
     private final UUID playerUUID;
@@ -14,12 +11,9 @@ public class Punishment {
     private final String reason;
     private final String operator;
     private final long createdAt;
-    private final long expiresAt; // -1 if permanent
+    private final long expiresAt;
     private boolean active;
 
-    /**
-     * Constructor for creating a new Punishment
-     */
     public Punishment(
             UUID playerUUID,
             String playerName,
@@ -42,9 +36,6 @@ public class Punishment {
         this.active = active;
     }
 
-    /**
-     * Create a permanent punishment (ban/mute without expiration)
-     */
     public static Punishment createPermanent(
             UUID playerUUID,
             String playerName,
@@ -56,9 +47,6 @@ public class Punishment {
         return new Punishment(playerUUID, playerName, ipAddress, type, reason, operator, System.currentTimeMillis(), -1, true);
     }
 
-    /**
-     * Create a temporary punishment with duration
-     */
     public static Punishment createTemporary(
             UUID playerUUID,
             String playerName,
@@ -72,24 +60,16 @@ public class Punishment {
         return new Punishment(playerUUID, playerName, ipAddress, type, reason, operator, now, now + durationMillis, true);
     }
 
-    /**
-     * Check if this punishment has expired
-     */
     public boolean hasExpired() {
         if (expiresAt == -1) {
-            return false; // Permanent punishments don't expire
+            return false;
         }
         return System.currentTimeMillis() >= expiresAt;
     }
 
-    /**
-     * Check if this punishment is currently active and unexpired
-     */
     public boolean isActive() {
         return active && !hasExpired();
     }
-
-    // Getters and Setters
 
     public UUID getPlayerUUID() {
         return playerUUID;

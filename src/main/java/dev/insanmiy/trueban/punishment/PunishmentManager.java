@@ -8,9 +8,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Manages all punishment operations with async database operations
- */
 public class PunishmentManager {
 
     private final TrueBan plugin;
@@ -23,9 +20,6 @@ public class PunishmentManager {
         this.activePunishments = new ConcurrentHashMap<>();
     }
 
-    /**
-     * Add a permanent punishment
-     */
     public CompletableFuture<Void> addPermanentPunishment(
             UUID playerUUID,
             String playerName,
@@ -38,9 +32,6 @@ public class PunishmentManager {
         return addPunishment(punishment);
     }
 
-    /**
-     * Add a temporary punishment
-     */
     public CompletableFuture<Void> addTemporaryPunishment(
             UUID playerUUID,
             String playerName,
@@ -54,9 +45,6 @@ public class PunishmentManager {
         return addPunishment(punishment);
     }
 
-    /**
-     * Add a punishment to the system
-     */
     private CompletableFuture<Void> addPunishment(Punishment punishment) {
         return storage.savePunishment(punishment).thenRun(() -> {
             activePunishments.computeIfAbsent(punishment.getPlayerUUID(), k -> Collections.synchronizedList(new ArrayList<>()))
@@ -64,9 +52,6 @@ public class PunishmentManager {
         });
     }
 
-    /**
-     * Remove a punishment (unban/unmute)
-     */
     public CompletableFuture<Void> removePunishment(UUID playerUUID, PunishmentType type) {
         return CompletableFuture.runAsync(() -> {
             List<Punishment> playerPunishments = activePunishments.getOrDefault(playerUUID, new ArrayList<>());
@@ -80,50 +65,32 @@ public class PunishmentManager {
         });
     }
 
-    /**
-     * Get all active punishments for a player
-     */
     public CompletableFuture<List<Punishment>> getActivePunishments(UUID playerUUID) {
         return storage.getActivePunishments(playerUUID);
     }
 
-    /**
-     * Get punishment history for a player
-     */
     public CompletableFuture<List<Punishment>> getPunishmentHistory(UUID playerUUID) {
         return storage.getPunishmentHistory(playerUUID);
     }
 
-    /**
-     * Check if a player is banned
-     */
     public CompletableFuture<Boolean> isBanned(UUID playerUUID) {
         return getActivePunishments(playerUUID).thenApply(punishments ->
                 punishments.stream().anyMatch(p -> p.getType().isBan())
         );
     }
 
-    /**
-     * Check if a player IP is banned
-     */
     public CompletableFuture<Boolean> isIPBanned(String ipAddress) {
         return storage.getPunishmentsByIP(ipAddress).thenApply(punishments ->
                 punishments.stream().anyMatch(p -> p.getType() == PunishmentType.IPBAN && p.isActive())
         );
     }
 
-    /**
-     * Check if a player is muted
-     */
     public CompletableFuture<Boolean> isMuted(UUID playerUUID) {
         return getActivePunishments(playerUUID).thenApply(punishments ->
                 punishments.stream().anyMatch(p -> p.getType().isMute())
         );
     }
 
-    /**
-     * Get ban message for a player
-     */
     public CompletableFuture<String> getBanMessage(UUID playerUUID) {
         return getActivePunishments(playerUUID).thenApply(punishments -> {
             for (Punishment p : punishments) {
@@ -144,9 +111,6 @@ public class PunishmentManager {
         });
     }
 
-    /**
-     * Expire active punishments (called periodically)
-     */
     public CompletableFuture<Void> expireActivePunishments() {
         return CompletableFuture.runAsync(() -> {
             for (List<Punishment> punishments : activePunishments.values()) {
@@ -162,23 +126,15 @@ public class PunishmentManager {
         });
     }
 
-    /**
-     * Get offline player UUID from name
-     */
     public CompletableFuture<UUID> getPlayerUUID(String playerName) {
-        // First try to get online player
         var onlinePlayer = Bukkit.getPlayer(playerName);
         if (onlinePlayer != null) {
             return CompletableFuture.completedFuture(onlinePlayer.getUniqueId());
         }
 
-        // Try to get from storage
         return storage.getOfflineUUID(playerName);
     }
 
-    /**
-     * Create placeholder map from punishment
-     */
     private Map<String, String> createPlaceholders(Punishment p) {
         Map<String, String> placeholders = new HashMap<>();
         placeholders.put("player", p.getPlayerName());
@@ -189,9 +145,6 @@ public class PunishmentManager {
         return placeholders;
     }
 
-    /**
-     * Format duration in milliseconds to human-readable format
-     */
     private String formatDuration(long milliseconds) {
         if (milliseconds <= 0) {
             return "expired";
@@ -216,17 +169,10 @@ public class PunishmentManager {
         }
     }
 
-    /**
-     * Format date timestamp
-     */
     private String formatDate(long timestamp) {
         return new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(timestamp));
     }
 
-    /**
-     * Parse duration string to milliseconds
-     * Format: 30s, 5m, 2h, 1d, 4w
-     */
     public static long parseDuration(String duration) throws NumberFormatException {
         duration = duration.trim().toLowerCase();
 
@@ -251,7 +197,6 @@ public class PunishmentManager {
             case "m" -> value * 60 * 1000;
             case "h" -> value * 60 * 60 * 1000;
             case "d" -> value * 24 * 60 * 60 * 1000;
-            case "w" -> value * 7 * 24 * 60 * 60 * 1000;
             default -> throw new NumberFormatException("Unknown time unit: " + unit);
         };
     }

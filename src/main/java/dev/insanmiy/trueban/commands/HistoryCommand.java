@@ -11,9 +11,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-/**
- * /history <player>
- */
 public class HistoryCommand extends CommandBase implements CommandExecutor {
 
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -43,7 +40,6 @@ public class HistoryCommand extends CommandBase implements CommandExecutor {
                 return;
             }
 
-            // Get punishment history
             plugin.getPunishmentManager().getPunishmentHistory(uuid).whenComplete((punishments, ex) -> {
                 if (ex != null) {
                     sendMessage(sender, "errors.database-error");
@@ -56,18 +52,15 @@ public class HistoryCommand extends CommandBase implements CommandExecutor {
                     return;
                 }
 
-                // Send header
                 Map<String, String> headerPlaceholders = createPlaceholders("player", playerName);
                 sender.sendMessage(messages.getMessage("history.header", headerPlaceholders));
 
-                // Send entries
                 for (int i = 0; i < punishments.size(); i++) {
                     Punishment p = punishments.get(i);
                     String message = formatHistoryEntry(i, p);
                     sender.sendMessage(message);
                 }
 
-                // Send footer
                 sender.sendMessage(messages.getMessage("history.footer"));
             });
         });
@@ -75,9 +68,6 @@ public class HistoryCommand extends CommandBase implements CommandExecutor {
         return true;
     }
 
-    /**
-     * Format a history entry
-     */
     private String formatHistoryEntry(int index, Punishment punishment) {
         String statusBadge = punishment.isActive() ? 
                 messages.getMessage("history.active-badge") : 
@@ -111,9 +101,6 @@ public class HistoryCommand extends CommandBase implements CommandExecutor {
         }
     }
 
-    /**
-     * Format duration
-     */
     private String formatDuration(long milliseconds) {
         if (milliseconds <= 0) {
             return "expired";

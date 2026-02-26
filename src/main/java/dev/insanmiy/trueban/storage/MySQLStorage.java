@@ -13,9 +13,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
-/**
- * MySQL storage implementation with HikariCP connection pooling
- */
 public class MysqlStorage implements StorageManager {
 
     private final JavaPlugin plugin;
@@ -36,9 +33,6 @@ public class MysqlStorage implements StorageManager {
         this.ready = true;
     }
 
-    /**
-     * Setup HikariCP connection pool
-     */
     private HikariDataSource setupConnectionPool() {
         TrueBan trueBan = (TrueBan) plugin;
         Map<String, Object> mysqlConfig = (Map<String, Object>) trueBan.getConfigManager().getConfigData().get("mysql");
@@ -69,18 +63,12 @@ public class MysqlStorage implements StorageManager {
         return new HikariDataSource(config);
     }
 
-    /**
-     * Initialize database and create tables
-     */
     private void initializeDatabase() throws Exception {
         try (Connection conn = dataSource.getConnection()) {
             createTables(conn);
         }
     }
 
-    /**
-     * Create required tables
-     */
     private void createTables(Connection conn) throws SQLException {
         String createPunishmentsTable = """
                 CREATE TABLE IF NOT EXISTS punishments (
@@ -334,9 +322,6 @@ public class MysqlStorage implements StorageManager {
         }, executor);
     }
 
-    /**
-     * Convert ResultSet row to Punishment object
-     */
     private Punishment resultSetToPunishment(ResultSet rs) throws SQLException {
         return new Punishment(
                 UUID.fromString(rs.getString("player_uuid")),
@@ -351,9 +336,6 @@ public class MysqlStorage implements StorageManager {
         );
     }
 
-    /**
-     * Helper to convert Object to int
-     */
     private int toInt(Object obj) {
         if (obj instanceof Number) {
             return ((Number) obj).intValue();
@@ -361,9 +343,6 @@ public class MysqlStorage implements StorageManager {
         return Integer.parseInt(obj.toString());
     }
 
-    /**
-     * Helper to convert Object to long
-     */
     private long toLong(Object obj) {
         if (obj instanceof Number) {
             return ((Number) obj).longValue();

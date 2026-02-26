@@ -12,9 +12,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Tab completer for IP ban/unban commands
- */
 public class IpTabCompleter implements TabCompleter {
 
     private final TrueBan plugin;
@@ -31,7 +28,6 @@ public class IpTabCompleter implements TabCompleter {
             String input = args[0].toLowerCase();
             Set<String> seen = new HashSet<>();
 
-            // Add online players (show their IPs)
             for (Player player : Bukkit.getOnlinePlayers()) {
                 String name = player.getName();
                 if (name.toLowerCase().startsWith(input) && seen.add(name)) {
@@ -39,9 +35,7 @@ public class IpTabCompleter implements TabCompleter {
                 }
             }
 
-            // Add IP addresses if user is typing digits
             if (input.matches("\\d.*")) {
-                // Could add known IPs from storage, but for now keep it simple
             }
         }
 

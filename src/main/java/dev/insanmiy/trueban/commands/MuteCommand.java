@@ -10,9 +10,6 @@ import org.bukkit.entity.Player;
 import java.util.Arrays;
 import java.util.Map;
 
-/**
- * /mute <player> <reason>
- */
 public class MuteCommand extends CommandBase implements CommandExecutor {
 
     public MuteCommand(TrueBan plugin) {
@@ -42,7 +39,6 @@ public class MuteCommand extends CommandBase implements CommandExecutor {
                 return;
             }
 
-            // Check if already muted
             plugin.getPunishmentManager().getActivePunishments(uuid).whenComplete((punishments, ex) -> {
                 if (ex != null) {
                     sendMessage(sender, "errors.database-error");
@@ -58,7 +54,6 @@ public class MuteCommand extends CommandBase implements CommandExecutor {
                     return;
                 }
 
-                // Save mute
                 plugin.getPunishmentManager().addPermanentPunishment(
                         uuid, playerName, null, PunishmentType.MUTE, reason, operator
                 ).whenComplete((v, ex2) -> {

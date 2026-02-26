@@ -12,9 +12,6 @@ import org.bukkit.entity.Player;
 import java.util.Arrays;
 import java.util.Map;
 
-/**
- * /tempban <player> <duration> <reason>
- */
 public class TempbanCommand extends CommandBase implements CommandExecutor {
 
     public TempbanCommand(TrueBan plugin) {
@@ -38,7 +35,6 @@ public class TempbanCommand extends CommandBase implements CommandExecutor {
         String reason = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
         String operator = sender.getName();
 
-        // Parse duration
         long durationMillis;
         try {
             durationMillis = PunishmentManager.parseDuration(durationStr);
@@ -67,7 +63,6 @@ public class TempbanCommand extends CommandBase implements CommandExecutor {
                 );
             }
 
-            // Save punishment
             plugin.getPunishmentManager().addTemporaryPunishment(
                     uuid, playerName, ipAddress, PunishmentType.TEMPBAN, reason, operator, durationMillis
             ).whenComplete((v, ex) -> {

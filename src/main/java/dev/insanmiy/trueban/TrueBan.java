@@ -17,11 +17,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-/**
- * TrueBan - Production-ready Minecraft moderation plugin for PaperMC
- * Version: 1.0.0
- * Main plugin class handles initialization and management
- */
 public class TrueBan extends JavaPlugin {
 
     private static TrueBan instance;
@@ -44,33 +39,26 @@ public class TrueBan extends JavaPlugin {
             getLogger().info("TrueBan v" + getDescription().getVersion() + " is starting...");
             getLogger().info("================================");
 
-            // Step 1: Load configurations
             this.configManager = new ConfigManager(this);
             configManager.loadConfigs();
             getLogger().info("✓ Configuration loaded");
 
-            // Step 2: Load messages
             this.messageManager = new MessageManager(this);
             messageManager.loadMessages();
             getLogger().info("✓ Messages loaded");
 
-            // Step 3: Initialize storage system
             this.storageManager = initializeStorage();
             getLogger().info("✓ Storage system initialized (" + configManager.getStorageType() + ")");
 
-            // Step 4: Initialize punishment manager
             this.punishmentManager = new PunishmentManager(this, storageManager);
             getLogger().info("✓ Punishment manager initialized");
 
-            // Step 5: Register commands with tab completers
             registerCommands();
             getLogger().info("✓ Commands registered");
 
-            // Step 6: Register listeners
             registerListeners();
             getLogger().info("✓ Listeners registered");
 
-            // Step 7: Schedule async expiration task
             scheduleExpirationTask();
             getLogger().info("✓ Expiration task scheduled");
 
@@ -89,7 +77,6 @@ public class TrueBan extends JavaPlugin {
     public void onDisable() {
         getLogger().info("TrueBan is shutting down...");
 
-        // Shutdown executors
         if (expirationExecutor != null && !expirationExecutor.isShutdown()) {
             expirationExecutor.shutdown();
             try {
@@ -102,7 +89,6 @@ public class TrueBan extends JavaPlugin {
             }
         }
 
-        // Close storage
         if (storageManager != null) {
             storageManager.close();
         }
@@ -110,13 +96,9 @@ public class TrueBan extends JavaPlugin {
         getLogger().info("TrueBan disabled successfully!");
     }
 
-    /**
-     * Initialize the storage system based on configuration
-     */
     private StorageManager initializeStorage() throws Exception {
         String storageType = configManager.getStorageType().toUpperCase();
 
-        // Only DB-backed storage is supported (SQLite by default)
         return switch (storageType) {
             case "SQLITE" -> new SqliteStorage(this);
             case "MYSQL" -> new MysqlStorage(this);
@@ -127,9 +109,6 @@ public class TrueBan extends JavaPlugin {
         };
     }
 
-    /**
-     * Register all commands
-     */
     private void registerCommands() {
         Objects.requireNonNull(getCommand("ban")).setExecutor(new BanCommand(this));
         Objects.requireNonNull(getCommand("tempban")).setExecutor(new TempbanCommand(this));
@@ -141,7 +120,6 @@ public class TrueBan extends JavaPlugin {
         Objects.requireNonNull(getCommand("unmute")).setExecutor(new UnmuteCommand(this));
         Objects.requireNonNull(getCommand("history")).setExecutor(new HistoryCommand(this));
 
-        // Tab completers
         Objects.requireNonNull(getCommand("ban")).setTabCompleter(new PlayerListTabCompleter(this));
         Objects.requireNonNull(getCommand("tempban")).setTabCompleter(new PlayerListTabCompleter(this));
         Objects.requireNonNull(getCommand("unban")).setTabCompleter(new UnbanTabCompleter(this));
@@ -153,17 +131,11 @@ public class TrueBan extends JavaPlugin {
         Objects.requireNonNull(getCommand("history")).setTabCompleter(new PlayerListTabCompleter(this));
     }
 
-    /**
-     * Register all event listeners
-     */
     private void registerListeners() {
         getServer().getPluginManager().registerEvents(new PlayerLoginListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerChatListener(this), this);
     }
 
-    /**
-     * Schedule the expiration check task
-     */
     private void scheduleExpirationTask() {
         expirationExecutor = Executors.newScheduledThreadPool(configManager.getAsyncThreads());
         long interval = configManager.getExpirationCheckInterval();
@@ -180,8 +152,6 @@ public class TrueBan extends JavaPlugin {
                 interval, interval, TimeUnit.SECONDS
         );
     }
-
-    // Getters
 
     public static TrueBan getInstance() {
         return instance;

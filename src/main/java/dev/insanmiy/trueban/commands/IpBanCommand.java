@@ -11,9 +11,6 @@ import org.bukkit.entity.Player;
 import java.util.Arrays;
 import java.util.Map;
 
-/**
- * /ipban <player|ip> <reason>
- */
 public class IpbanCommand extends CommandBase implements CommandExecutor {
 
     public IpbanCommand(TrueBan plugin) {
@@ -38,11 +35,9 @@ public class IpbanCommand extends CommandBase implements CommandExecutor {
 
         String ipAddress;
 
-        // Check if target is IP or player name
         if (isIPAddress(target)) {
             ipAddress = target;
         } else {
-            // Get IP from online player
             Player player = Bukkit.getPlayer(target);
             if (player != null) {
                 ipAddress = player.getAddress().getAddress().getHostAddress();
@@ -57,14 +52,12 @@ public class IpbanCommand extends CommandBase implements CommandExecutor {
             }
         }
 
-        // Save IP ban for multiple UUIDs that match this IP
         plugin.getStorageManager().getPunishmentsByIP(ipAddress).whenComplete((existing, ex) -> {
             if (ex != null) {
                 sendMessage(sender, "errors.database-error");
                 return;
             }
 
-            // Create IP ban punishment
             plugin.getPunishmentManager().addPermanentPunishment(
                     java.util.UUID.randomUUID(), "IPBan-" + ipAddress, ipAddress, 
                     PunishmentType.IPBAN, reason, operator
@@ -89,9 +82,6 @@ public class IpbanCommand extends CommandBase implements CommandExecutor {
         return true;
     }
 
-    /**
-     * Check if string is an IP address
-     */
     private boolean isIPAddress(String str) {
         return str.matches("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
     }

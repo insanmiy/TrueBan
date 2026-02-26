@@ -10,9 +10,6 @@ import org.bukkit.entity.Player;
 
 import java.util.Map;
 
-/**
- * /ban <player> <reason>
- */
 public class BanCommand extends CommandBase implements CommandExecutor {
 
     public BanCommand(TrueBan plugin) {
@@ -53,7 +50,6 @@ public class BanCommand extends CommandBase implements CommandExecutor {
                 );
             }
 
-            // Save punishment
             plugin.getPunishmentManager().addPermanentPunishment(
                     uuid, playerName, ipAddress, PunishmentType.BAN, reason, operator
             ).whenComplete((v, ex) -> {

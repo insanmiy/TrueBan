@@ -1,5 +1,5 @@
 name: TrueBan
-version: 2.0.0
+version: 2.1.5
 description: Trueban is a flexible ban management plugin for server owners who dont want to mess around with configuration files.
 author: insanmiy
 main: dev.insanmiy.trueban.TrueBan

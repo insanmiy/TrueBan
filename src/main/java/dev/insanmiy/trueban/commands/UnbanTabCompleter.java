@@ -13,9 +13,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Tab completer for unban command (players and IPs)
- */
 public class UnbanTabCompleter implements TabCompleter {
 
     private final TrueBan plugin;
@@ -32,7 +29,6 @@ public class UnbanTabCompleter implements TabCompleter {
             String input = args[0].toLowerCase();
             Set<String> seen = new HashSet<>();
 
-            // Add online players
             for (Player player : Bukkit.getOnlinePlayers()) {
                 String name = player.getName();
                 if (name.toLowerCase().startsWith(input) && seen.add(name)) {
@@ -40,7 +36,6 @@ public class UnbanTabCompleter implements TabCompleter {
                 }
             }
 
-            // Add banned players from storage
             plugin.getStorageManager().getKnownPlayerNames().whenComplete((names, ex) -> {
                 if (names != null) {
                     for (String name : names) {
@@ -51,9 +46,6 @@ public class UnbanTabCompleter implements TabCompleter {
                 }
             });
 
-            // Add banned IPs
-            // Note: This would require iterating through all punishments
-            // For now, we'll keep it simple - users can type IPs manually
         }
 
         return completions;

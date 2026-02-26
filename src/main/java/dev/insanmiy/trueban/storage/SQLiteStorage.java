@@ -13,9 +13,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
-/**
- * SQLite storage implementation
- */
 public class SqliteStorage implements StorageManager {
 
     private final JavaPlugin plugin;
@@ -36,11 +33,7 @@ public class SqliteStorage implements StorageManager {
         this.ready = true;
     }
 
-    /**
-     * Initialize SQLite database and create tables
-     */
     private void initializeDatabase() throws Exception {
-        // Create data folder if it doesn't exist
         Files.createDirectories(Paths.get(plugin.getDataFolder().getAbsolutePath()));
 
         try (Connection conn = getConnection()) {
@@ -48,17 +41,11 @@ public class SqliteStorage implements StorageManager {
         }
     }
 
-    /**
-     * Get a database connection
-     */
     private Connection getConnection() throws SQLException {
         String url = "jdbc:sqlite:" + databasePath;
         return DriverManager.getConnection(url);
     }
 
-    /**
-     * Create required tables
-     */
     private void createTables(Connection conn) throws SQLException {
         String createPunishmentsTable = """
                 CREATE TABLE IF NOT EXISTS punishments (
@@ -212,7 +199,6 @@ public class SqliteStorage implements StorageManager {
     public CompletableFuture<UUID> getOfflineUUID(String playerName) {
         return CompletableFuture.supplyAsync(() -> {
             try (Connection conn = getConnection()) {
-                // Use case-insensitive lookup for player names so capitalization doesn't matter
                 String sql = "SELECT DISTINCT player_uuid FROM punishments WHERE LOWER(player_name) = LOWER(?) LIMIT 1";
 
                 try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -317,9 +303,6 @@ public class SqliteStorage implements StorageManager {
         }, executor);
     }
 
-    /**
-     * Convert ResultSet row to Punishment object
-     */
     private Punishment resultSetToPunishment(ResultSet rs) throws SQLException {
         return new Punishment(
                 UUID.fromString(rs.getString("player_uuid")),

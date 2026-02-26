@@ -11,9 +11,6 @@ import org.bukkit.entity.Player;
 import java.util.Arrays;
 import java.util.Map;
 
-/**
- * /kick <player> <reason>
- */
 public class KickCommand extends CommandBase implements CommandExecutor {
 
     public KickCommand(TrueBan plugin) {
@@ -43,7 +40,6 @@ public class KickCommand extends CommandBase implements CommandExecutor {
             return true;
         }
 
-        // Kick the player
         String kickMessage = messages.getMessage("kick.kicked_message",
                 createPlaceholders("reason", reason, "operator", operator));
         player.kick(net.kyori.adventure.text.Component.text(kickMessage));
