@@ -1,0 +1,39 @@
+# TrueBan Configuration File
+# Storage configuration
+# Current Options: SQLITE, MYSQL
+# SQLite Configuration (used when storage.type is SQLITE)
+storage:
+sqlite:
+  file: trueban.db
+
+# MySQL Configuration (used when storage.type is MYSQL)
+mysql:
+  host: localhost
+  port: 3306
+  database: trueban
+  username: root
+  password: password
+  # Connection pool settings
+  pool:
+    max-size: 10
+    min-idle: 2
+    connection-timeout-seconds: 30
+    idle-timeout-seconds: 600
+
+# Plugin Settings
+settings:
+  # Check for expired punishments every X seconds
+  check-expiration-interval-seconds: 30
+  
+  # Number of async threads for database operations
+  async-threads: 2
+  
+  # Enable debug logging
+  debug: false
+
+# Duration format examples:
+# 30s = 30 seconds
+# 5m = 5 minutes
+# 2h = 2 hours
+# 1d = 1 day
+# 4w = 4 weeks

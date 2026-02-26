@@ -22,14 +22,14 @@ public class BanCommand extends CommandBase implements CommandExecutor {
             return true;
         }
 
-        if (args.length < 2) {
+        if (args.length < 1) {
             sendMessage(sender, "commands.invalid-syntax",
-                    createPlaceholders("usage", "/ban <player> <reason>"));
+                    createPlaceholders("usage", "/ban <player> [reason]"));
             return true;
         }
 
         String playerName = args[0];
-        String reason = String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length));
+        String reason = args.length > 1 ? String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length)) : "No reason provided";
         String operator = sender.getName();
 
         getPlayerUUID(playerName, uuid -> {
@@ -39,34 +39,56 @@ public class BanCommand extends CommandBase implements CommandExecutor {
                 return;
             }
 
-            String ipAddress = null;
-            Player onlinePlayer = Bukkit.getPlayer(uuid);
-            if (onlinePlayer != null) {
-                ipAddress = onlinePlayer.getAddress().getAddress().getHostAddress();
-                onlinePlayer.kickPlayer(
-                    messages.getMessage("ban.banned_message",
-                            createPlaceholders("player", playerName, "uuid", uuid.toString(),
-                                    "reason", reason, "operator", operator, "ip", ipAddress != null ? ipAddress : "N/A"))
-                );
-            }
-
-            plugin.getPunishmentManager().addPermanentPunishment(
-                    uuid, playerName, ipAddress, PunishmentType.BAN, reason, operator
-            ).whenComplete((v, ex) -> {
+            // Check if player is already banned
+            plugin.getPunishmentManager().getActivePunishments(uuid).whenComplete((existingPunishments, ex) -> {
                 if (ex != null) {
                     sendMessage(sender, "errors.database-error");
                     return;
                 }
 
-                Map<String, String> placeholders = createPlaceholders("player", playerName);
-                sendMessage(sender, "ban.successfully-banned", placeholders);
+                boolean alreadyBanned = existingPunishments.stream()
+                        .anyMatch(p -> (p.getType() == PunishmentType.BAN || p.getType() == PunishmentType.TEMPBAN) && p.isActive());
 
-                Map<String, String> notifyPlaceholders = createPlaceholders(
-                        "player", playerName, "operator", operator, "reason", reason);
-                notifyOperators("ban-notification", notifyPlaceholders);
+                if (alreadyBanned) {
+                    Map<String, String> placeholders = createPlaceholders("player", playerName);
+                    sendMessage(sender, "ban.already-banned", placeholders);
+                    return;
+                }
 
-                sendConsoleMessage("player-banned",
-                        createPlaceholders("player", playerName, "reason", reason));
+                final Player onlinePlayer = Bukkit.getPlayer(uuid);
+                final String ipAddress;
+                if (onlinePlayer != null) {
+                    ipAddress = onlinePlayer.getAddress().getAddress().getHostAddress();
+                } else {
+                    ipAddress = null;
+                }
+
+                plugin.getPunishmentManager().addPermanentPunishment(
+                        uuid, playerName, ipAddress, PunishmentType.BAN, reason, operator
+                ).whenComplete((v, ex2) -> {
+                    if (ex2 != null) {
+                        sendMessage(sender, "errors.database-error");
+                        return;
+                    }
+
+                    // Kick player on main thread after ban is saved
+                    if (onlinePlayer != null && onlinePlayer.isOnline()) {
+                        Bukkit.getScheduler().runTask(plugin, () -> {
+                            onlinePlayer.kickPlayer(
+                                messages.getMessage("ban.banned_message",
+                                        createPlaceholders("player", playerName, "uuid", uuid.toString(),
+                                                "reason", reason, "operator", operator, "ip", ipAddress != null ? ipAddress : "N/A"))
+                            );
+                        });
+                    }
+
+                    Map<String, String> placeholders = createPlaceholders("player", playerName);
+                    sendMessage(sender, "ban.successfully-banned", placeholders);
+
+                    Map<String, String> notifyPlaceholders = createPlaceholders(
+                            "player", playerName, "operator", operator, "reason", reason);
+                    notifyOperators("ban-notification", notifyPlaceholders);
+                });
             });
         });
 

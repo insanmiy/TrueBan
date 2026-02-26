@@ -156,17 +156,34 @@ public class PunishmentManager {
         long days = hours / 24;
         long weeks = days / 7;
 
+        seconds %= 60;
+        minutes %= 60;
+        hours %= 24;
+        days %= 7;
+
+        StringBuilder result = new StringBuilder();
+        
         if (weeks > 0) {
-            return weeks + "w " + (days % 7) + "d";
-        } else if (days > 0) {
-            return days + "d " + (hours % 24) + "h";
-        } else if (hours > 0) {
-            return hours + "h " + (minutes % 60) + "m";
-        } else if (minutes > 0) {
-            return minutes + "m " + (seconds % 60) + "s";
-        } else {
-            return seconds + "s";
+            result.append(weeks).append(" week").append(weeks > 1 ? "s" : "");
         }
+        if (days > 0) {
+            if (result.length() > 0) result.append(" ");
+            result.append(days).append(" day").append(days > 1 ? "s" : "");
+        }
+        if (hours > 0) {
+            if (result.length() > 0) result.append(" ");
+            result.append(hours).append(" hour").append(hours > 1 ? "s" : "");
+        }
+        if (minutes > 0) {
+            if (result.length() > 0) result.append(" ");
+            result.append(minutes).append(" minute").append(minutes > 1 ? "s" : "");
+        }
+        if (seconds > 0 || result.length() == 0) {
+            if (result.length() > 0) result.append(" ");
+            result.append(seconds).append(" second").append(seconds > 1 ? "s" : "");
+        }
+
+        return result.toString();
     }
 
     private String formatDate(long timestamp) {
@@ -175,29 +192,35 @@ public class PunishmentManager {
 
     public static long parseDuration(String duration) throws NumberFormatException {
         duration = duration.trim().toLowerCase();
-
-        String number = "";
-        String unit = "";
-
-        for (char c : duration.toCharArray()) {
-            if (Character.isDigit(c)) {
-                number += c;
-            } else {
-                unit += c;
-            }
+        
+        if (duration.isEmpty()) {
+            throw new NumberFormatException("Duration cannot be empty");
         }
-
-        if (number.isEmpty() || unit.isEmpty()) {
-            throw new NumberFormatException("Invalid duration format");
+        
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(\\d+)([smhd])");
+        java.util.regex.Matcher matcher = pattern.matcher(duration);
+        
+        long totalMillis = 0;
+        boolean found = false;
+        
+        while (matcher.find()) {
+            found = true;
+            long value = Long.parseLong(matcher.group(1));
+            String unit = matcher.group(2);
+            
+            totalMillis += switch (unit) {
+                case "s" -> value * 1000;
+                case "m" -> value * 60 * 1000;
+                case "h" -> value * 60 * 60 * 1000;
+                case "d" -> value * 24 * 60 * 60 * 1000;
+                default -> throw new NumberFormatException("Unknown time unit: " + unit);
+            };
         }
-
-        long value = Long.parseLong(number);
-        return switch (unit.toLowerCase()) {
-            case "s" -> value * 1000;
-            case "m" -> value * 60 * 1000;
-            case "h" -> value * 60 * 60 * 1000;
-            case "d" -> value * 24 * 60 * 60 * 1000;
-            default -> throw new NumberFormatException("Unknown time unit: " + unit);
-        };
+        
+        if (!found) {
+            throw new NumberFormatException("Invalid duration format. Use: 30s, 5m, 2h, 1d, or combinations like 1h30m");
+        }
+        
+        return totalMillis;
     }
 }

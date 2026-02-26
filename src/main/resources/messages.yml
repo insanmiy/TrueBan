@@ -1,0 +1,96 @@
+# TrueBan Messages Configuration File
+# All messages are fully customizable and support color codes (& → §)
+# Placeholders: %player%, %uuid%, %reason%, %operator%, %duration%, %expiration%, %ip%
+
+# Plugin prefix
+prefix: "&c[&fTrueBan&c]&r"
+
+# Command Messages
+commands:
+  no-permission: "&cYou do not have permission to use this command."
+  player-not-found: "&cPlayer &f%player%&c not found."
+  invalid-duration: "&cInvalid duration format. Use: 30s, 5m, 2h, 1d, or combinations like 1h30m"
+  invalid-syntax: "&cUsage: %usage%"
+
+# Ban Messages
+ban:
+  banned_message: |
+    &7You have been &cpermanently banned&7 from this server.
+    &7Reason: &f%reason%
+    &7Banned by: &f%operator%
+    &7Duration: &cPermanent
+  tempban_message: |
+    &7You have been &ctemporarily banned&7 from this server.
+    &7Reason: &f%reason%
+    &7Banned by: &f%operator%
+    &7Duration: &f%duration%&7 (Expires: &f%expiration%&7)
+  ipban_message: |
+    &7Your IP address has been &cpermanently banned&7 from this server.
+    &7Reason: &f%reason%
+    &7Banned by: &f%operator%
+    &7Duration: &cPermanent
+  already-banned: "&cPlayer &f%player%&c is already banned."
+  successfully-banned: "&7Player &f%player%&7 has been &cbanned&7."
+  successfully-tempbanned: "&7Player &f%player%&7 has been &ctemporarily banned&7 for &f%duration%&7."
+  successfully-ipbanned: "&7IP &f%ip%&7 has been &cbanned&7."
+
+# Unban Messages
+unban:
+  successfully-unbanned: "&7Player &f%player%&7 has been &a✓ unbanned&7."
+  not-banned: "&cPlayer &f%player%&c is not currently banned."
+  successfully-unipbanned: "&7IP &f%ip%&7 has been &a✓ unbanned&7."
+  not-ipbanned: "&cIP &f%ip%&c is not currently IP banned."
+
+# Kick Messages
+kick:
+  kicked_message: |
+    &7You have been &ckicked&7 from the server.
+    
+    &7Reason: &f%reason%
+    &7Kicked by: &f%operator%
+  successfully-kicked: "&7Player &f%player%&7 has been &ckicked&7."
+
+# Mute Messages
+mute:
+  muted_message: "&cYou have been permanently muted. Reason: &f%reason%"
+  tempmuted_message: "&cYou have been muted for &f%duration%&c. Reason: &f%reason%"
+  already-muted: "&cPlayer &f%player%&c is already muted."
+  successfully-muted: "&7Player &f%player%&7 has been &cmuted&7."
+  successfully-tempmuted: "&7Player &f%player%&7 has been &cmuted&7 for &f%duration%&7."
+  chat-blocked: "&cYou are muted and cannot send messages."
+
+# Unmute Messages
+unmute:
+  successfully-unmuted: "&7Player &f%player%&7 has been &a✓ unmuted&7."
+  not-muted: "&cPlayer &f%player%&c is not currently muted."
+
+# History Messages
+history:
+  header: "&7========== &f%player%&7 ==========&r"
+  entry-format: "&7[&f#%id%&7] &f%type%&7 - Reason: &f%reason%&7 - By: &f%operator%&7 - Created: &f%created%"
+  tempban-entry-format: "&7[&f#%id%&7] &f%type%&7 (&c%duration%&7) - Reason: &f%reason%&7 - By: &f%operator%&7 - Expires: &f%expiration%"
+  active-badge: "&a[ACTIVE]"
+  expired-badge: "&c[EXPIRED]"
+  no-history: "&cNo punishment history found for &f%player%&c."
+  footer: "&7================================&r"
+
+# Console Messages
+console:
+  player-kicked: "Player %player% has been kicked. Reason: %reason%"
+
+# Moderation Notifications (for trueban.notify permission)
+notifications:
+  enabled: true
+  ban-notification: "&e[TrueBan] &f%operator% &ebanned &f%player% &efor: &f%reason%"
+  tempban-notification: "&e[TrueBan] &f%operator% &etemporarily banned &f%player% &efor &f%duration% &efor: &f%reason%"
+  mute-notification: "&e[TrueBan] &f%operator% &emuted &f%player% &efor: &f%reason%"
+  tempmute-notification: "&e[TrueBan] &f%operator% &etemporarily muted &f%player% &efor &f%duration% &efor: &f%reason%"
+  kick-notification: "&e[TrueBan] &f%operator% &ekicked &f%player% &efor: &f%reason%"
+  unban-notification: "&e[TrueBan] &f%operator% &eunbanned &f%player%"
+  unmute-notification: "&e[TrueBan] &f%operator% &eunmuted &f%player%"
+
+# Error Messages
+errors:
+  database-error: "&cA database error occurred. Please contact an administrator."
+  player-lookup-failed: "&cFailed to lookup player &f%player%&c. Please try again later."
+  storage-not-ready: "&cStorage system is not ready. Please try again later."

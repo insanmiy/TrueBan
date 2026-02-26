@@ -23,15 +23,15 @@ public class TempmuteCommand extends CommandBase implements CommandExecutor {
             return true;
         }
 
-        if (args.length < 3) {
+        if (args.length < 2) {
             sendMessage(sender, "commands.invalid-syntax",
-                    createPlaceholders("usage", "/tempmute <player> <duration> <reason>"));
+                    createPlaceholders("usage", "/tempmute <player> <duration> [reason]"));
             return true;
         }
 
         String playerName = args[0];
         String durationStr = args[1];
-        String reason = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
+        String reason = args.length > 2 ? String.join(" ", Arrays.copyOfRange(args, 2, args.length)) : "No reason provided";
         String operator = sender.getName();
 
         long durationMillis;
@@ -74,8 +74,9 @@ public class TempmuteCommand extends CommandBase implements CommandExecutor {
 
                     Player player = org.bukkit.Bukkit.getPlayer(uuid);
                     if (player != null && player.isOnline()) {
+                        String formattedDuration = formatDuration(durationMillis);
                         player.sendMessage(messages.getMessage("mute.tempmuted_message",
-                                createPlaceholders("reason", reason, "duration", durationStr)));
+                                createPlaceholders("reason", reason, "duration", formattedDuration)));
                     }
 
                     Map<String, String> placeholders = createPlaceholders("player", playerName, "duration", durationStr);
@@ -84,13 +85,51 @@ public class TempmuteCommand extends CommandBase implements CommandExecutor {
                     Map<String, String> notifyPlaceholders = createPlaceholders(
                             "player", playerName, "operator", operator, "reason", reason, "duration", durationStr);
                     notifyOperators("tempmute-notification", notifyPlaceholders);
-
-                    sendConsoleMessage("player-muted",
-                            createPlaceholders("player", playerName, "reason", reason));
                 });
             });
         });
 
         return true;
+    }
+
+    private String formatDuration(long milliseconds) {
+        if (milliseconds <= 0) {
+            return "expired";
+        }
+
+        long seconds = milliseconds / 1000;
+        long minutes = seconds / 60;
+        long hours = minutes / 60;
+        long days = hours / 24;
+        long weeks = days / 7;
+
+        seconds %= 60;
+        minutes %= 60;
+        hours %= 24;
+        days %= 7;
+
+        StringBuilder result = new StringBuilder();
+        
+        if (weeks > 0) {
+            result.append(weeks).append(" week").append(weeks > 1 ? "s" : "");
+        }
+        if (days > 0) {
+            if (result.length() > 0) result.append(" ");
+            result.append(days).append(" day").append(days > 1 ? "s" : "");
+        }
+        if (hours > 0) {
+            if (result.length() > 0) result.append(" ");
+            result.append(hours).append(" hour").append(hours > 1 ? "s" : "");
+        }
+        if (minutes > 0) {
+            if (result.length() > 0) result.append(" ");
+            result.append(minutes).append(" minute").append(minutes > 1 ? "s" : "");
+        }
+        if (seconds > 0 || result.length() == 0) {
+            if (result.length() > 0) result.append(" ");
+            result.append(seconds).append(" second").append(seconds > 1 ? "s" : "");
+        }
+
+        return result.toString();
     }
 }

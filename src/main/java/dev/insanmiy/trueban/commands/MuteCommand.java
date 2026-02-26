@@ -22,14 +22,14 @@ public class MuteCommand extends CommandBase implements CommandExecutor {
             return true;
         }
 
-        if (args.length < 2) {
+        if (args.length < 1) {
             sendMessage(sender, "commands.invalid-syntax",
-                    createPlaceholders("usage", "/mute <player> <reason>"));
+                    createPlaceholders("usage", "/mute <player> [reason]"));
             return true;
         }
 
         String playerName = args[0];
-        String reason = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+        String reason = args.length > 1 ? String.join(" ", Arrays.copyOfRange(args, 1, args.length)) : "No reason provided";
         String operator = sender.getName();
 
         getPlayerUUID(playerName, uuid -> {
@@ -74,9 +74,6 @@ public class MuteCommand extends CommandBase implements CommandExecutor {
                     Map<String, String> notifyPlaceholders = createPlaceholders(
                             "player", playerName, "operator", operator, "reason", reason);
                     notifyOperators("mute-notification", notifyPlaceholders);
-
-                    sendConsoleMessage("player-muted",
-                            createPlaceholders("player", playerName, "reason", reason));
                 });
             });
         });

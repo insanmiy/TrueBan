@@ -53,10 +53,7 @@ public class PlayerLoginListener implements Listener {
 
             for (Punishment p : punishments) {
                 if (p.getType() == PunishmentType.IPBAN && p.isActive()) {
-                    plugin.getLogger().warning("IP-banned player attempted to join: " + event.getPlayer().getName());
-                    plugin.getLogger().warning("Reason: " + p.getReason());
-                    plugin.getLogger().warning("Banned by: " + p.getOperator());
-                    plugin.getLogger().warning("IP: " + p.getIpAddress());
+
                     event.disallow(PlayerLoginEvent.Result.KICK_BANNED, getIPBanMessage(p));
                     return;
                 }
@@ -99,16 +96,36 @@ public class PlayerLoginListener implements Listener {
         long minutes = seconds / 60;
         long hours = minutes / 60;
         long days = hours / 24;
+        long weeks = days / 7;
 
-        if (days > 0) {
-            return days + "d " + (hours % 24) + "h";
-        } else if (hours > 0) {
-            return hours + "h " + (minutes % 60) + "m";
-        } else if (minutes > 0) {
-            return minutes + "m " + (seconds % 60) + "s";
-        } else {
-            return seconds + "s";
+        seconds %= 60;
+        minutes %= 60;
+        hours %= 24;
+        days %= 7;
+
+        StringBuilder result = new StringBuilder();
+        
+        if (weeks > 0) {
+            result.append(weeks).append(" week").append(weeks > 1 ? "s" : "");
         }
+        if (days > 0) {
+            if (result.length() > 0) result.append(" ");
+            result.append(days).append(" day").append(days > 1 ? "s" : "");
+        }
+        if (hours > 0) {
+            if (result.length() > 0) result.append(" ");
+            result.append(hours).append(" hour").append(hours > 1 ? "s" : "");
+        }
+        if (minutes > 0) {
+            if (result.length() > 0) result.append(" ");
+            result.append(minutes).append(" minute").append(minutes > 1 ? "s" : "");
+        }
+        if (seconds > 0 || result.length() == 0) {
+            if (result.length() > 0) result.append(" ");
+            result.append(seconds).append(" second").append(seconds > 1 ? "s" : "");
+        }
+
+        return result.toString();
     }
 
     private String formatDate(long timestamp) {

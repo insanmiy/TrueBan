@@ -113,7 +113,9 @@ public class SqliteStorage implements StorageManager {
             } catch (SQLException e) {
                 plugin.getLogger().warning("Failed to save punishment: " + e.getMessage());
             }
-        }, executor);
+        }, executor).exceptionally(ex -> {
+            return null;
+        });
     }
 
     @Override
